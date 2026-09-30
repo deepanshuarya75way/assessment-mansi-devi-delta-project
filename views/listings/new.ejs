@@ -30,7 +30,7 @@
         id="image"
         type="file"
         class="form-control"
-        multiple accept="image/*">
+        multiple accept="image/*,application/pdf">
         <div class="form-text">you can select multiple images</div>
       </div>
 
@@ -63,7 +63,7 @@
         <input name="listing[country]" placeholder="India" type="text" class="form-control" required>
         <div class="invalid-feedback">Please enter a valid country.</div>
       </div>
-
+          
       <!-- Location -->
       <div class="mb-3">
         <label for="location" class="form-label">Location</label>
@@ -91,14 +91,16 @@
   })
 })()
 </script>
+
 <script>
-  console.log("file uploaded");
   const form=document.querySelector(".need-validation");
+ 
   const input=document.querySelector("#image");
+  
   const box=document.querySelector("#uploadProgressContainer");
   const progress=document.querySelector("#overallProgress");
   const fileProgress=document.querySelector("#uploadStatus");
-
+   const button=document.querySelector(".add.btn");
   form.addEventListener("submit" ,async(event)=>{
     if(!form.checkValidity())
     return;
