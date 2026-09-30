@@ -25,16 +25,30 @@
       <!-- Image (optional) -->
     
       <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Image Filename (optional)</label>
-          <input name="listing[image][filename]" placeholder="listingimage" type="text" class="form-control">
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">upload listing Image </label>
-          <input name="listing[image]"  type="file" class="form-control">
-        </div>
+        <label for="image" class="form-label"></label>
+        <input name="listing[image]"
+        id="image"
+        type="file"
+        class="form-control"
+        multiple accept="image/*">
+        <div class="form-text">you can select multiple images</div>
       </div>
+
+      <!-- upload progress -->
+       <div id="uploadProgressContainer" class="mb-3" style="display:none;">
+        <label class="form-label">upload Progress</label>
+        <div class="progress mb-2">
+        <div 
+        id="overallProgress"
+        class="progress-bar"
+        role="progressbar"
+        style="width:0%;">
+         0%
+        </div>
+       </div>
+       <div id="fileProgress"></div>
+       </div>
+       <div id="uploadStatus" class="mb-3"></div>
 
       <!-- Price -->
       <div class="mb-3 col-md-4">
@@ -76,4 +90,66 @@
     }, false)
   })
 })()
+</script>
+<script>
+  console.log("file uploaded");
+  const form=document.querySelector(".need-validation");
+  const input=document.querySelector("#image");
+  const box=document.querySelector("#uploadProgressContainer");
+  const progress=document.querySelector("#overallProgress");
+  const fileProgress=document.querySelector("#uploadStatus");
+
+  form.addEventListener("submit" ,async(event)=>{
+    if(!form.checkValidity())
+    return;
+  event.preventDefault();
+  box.style.display="block";
+  const data=new FormData(form);
+  data.delete("listing[image]");
+  const response =await fetch("/listings",{
+    method:"POST",
+    headers:{
+      "x-uploads-mode":"true"
+    },
+    body:data
+  });
+  const {id}=await response.json();
+  const files=[...input.files];
+  const loaded=files.map(()=> 0);
+  await Promise.all(files.map((file,i)=>{
+    return new Promise((resolve)=>{
+      const row=document.createElement("div");
+      row.textContent=`${file.name} - 0%`;
+      fileProgress.appendChild(row);
+      const xhr=new XMLHttpRequest();
+       xhr.open("POST",'/listings/${id}/images');
+       xhr.upload.onprogress=(e)=>{
+        if(!e.lengthComputable) return ;
+        loaded[i]=e.loaded;
+        const precent=Math.round(e.loaded /e.total * 100);
+        row.textContent=`${filr.name} _${precent}%`;
+        const total=files.reduce((sum,f)=>sum+f.size,0);
+        const done=loaded.reduce((sum,n)=>sum+n,0);
+        const overall=Math.round(done/total *100);
+        progress.style.width=`${overall}%`;
+        progress.textContent=`${overall}%`;
+
+       };
+      xhr.onload=()=>{
+        row.textContent +=xhr.status<300 ? "- Success" : "-Failed";
+        resolve()
+      };
+      xhr.onerror=()=>{
+        row.textContent += "-Failed";
+        resolve();
+      };
+     const fileData=new FormData();
+      fileData.append("image",file);
+      xhr.send(fileData);
+    });
+  }));
+  status.textContent="all uploads completed!";
+  window.location.href='/listings/${id}';
+    });
+  
 </script>

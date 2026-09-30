@@ -29,14 +29,19 @@ module.exports.createListing=async (req, res) => {
    const newListing = new Listing(req.body.listing);
   newListing.owner = req.user._id;
 
-  if (req.file) {
-    newListing.image = {
-      url: req.file.path,
-      filename: req.file.filename,
-    };
-  }
+
+
+if(req.files && req.files.length >0){
+    newListing.image=req.files.map(file=>({
+        url:file.path,
+        filename: file.filename,
+    }));
+}
 
   await newListing.save();
+  if(req.headers["x-upload-mode"]){
+    return res.json({ id:newListing._id});
+  }
   req.flash("success", "New Listing Created");
   res.redirect("/listings");
 };
@@ -49,7 +54,7 @@ module.exports.renderEditForm=async (req, res, next) => {
         req.flash("error","Listing you requested for does not exist!");
         return res.redirect("/listings");
     }
-    let originalImageUrl=listing.image.url;
+    let originalImageUrl=listing.image[0]?.url;
     originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");
     res.render("listings/edit.ejs", { listing,originalImageUrl });
 };
@@ -86,4 +91,33 @@ module.exports.destroyListing=async (req, res, next) => {
     
         req.flash("success", "Listing Deleted");
         return res.redirect("/listings");
+    };
+
+    module.exports.uploadImage= async(req,res)=>{
+        const {id}=req.params;
+        const listing = await Listing.findById(id);
+        if(!listing){
+            return res.status(404).json({
+                success:false,
+                message:"Listing not found"
+            });
+        }
+        if(!req.file){
+           return res.status(404).json({
+                success:false,
+                message:"No image uploaded" 
+           });
+        }
+        listing.image.push({
+            url:req.file.path,
+            filename:req.file.filename
+        });
+        await listing.save();
+        res.json({
+            success:true,
+            image:{
+                url: req.file.path,
+                filename:req.file.filename
+            }
+        });
     };

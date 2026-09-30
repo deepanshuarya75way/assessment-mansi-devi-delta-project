@@ -40,15 +40,44 @@
       >
     
   </div> -->
-<div class="mb-3">
+<!-- <div class="mb-3">
   original listing image<br>
   <img src="<%= originalImageUrl %>" 
    style="max-width: 300px; height: auto;">
+</div> -->
+
+<div class="mb-3">
+  <label class="form-label">Current Listing image </label>
+  <div>
+    <% if(listing.image && listing.image.length >0) => { %>
+      <% listing.image.forEach(image => { %>
+        <img 
+        src="<%=image.url.replace('/upload','/upload/w_250')%>" 
+        style="max-width:200px; height:auto; margin:5px">
+        <% }) %>
+        <% } else { %>
+          <p>No images uploaded.</p>
+          <% } %>
+  </div>
+ 
+
 </div>
 
-  <div class="mb-3">
+  <!-- <div class="mb-3">
   <label class="form-label">Upload New Image</label>
   <input type="file" name="listing[image]" class="form-control">
+</div> -->
+
+<div class="mb-3">
+  <label class="form-label">New Images</label>
+  <input
+  type="file"
+  name="listing[image]"
+  class="form-control"
+  multiple accept="image/*">
+  <div class="form-text">
+    You can select multiple images.
+  </div>
 </div>
 
 
